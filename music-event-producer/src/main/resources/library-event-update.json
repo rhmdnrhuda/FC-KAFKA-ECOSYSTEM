@@ -1,0 +1,9 @@
+{
+  "musicEventId": 123,
+  "musicEventType": "UPDATE",
+  "music": {
+    "musicId": 123,
+    "musicName": "Gala Bunga Matahari",
+    "musicAuthor": "Sal Priadi"
+  }
+}

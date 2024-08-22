@@ -1,0 +1,22 @@
+spring:
+  profiles:
+    active: dev
+---
+server:
+  port: 9099
+logging:
+  level:
+    root: INFO
+    com.example: DEBUG
+spring:
+  application:
+    name: music-event-consumer
+  config:
+    activate:
+      on-profile: dev
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092, localhost:9093, localhost:9094
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: music-events-listener-group

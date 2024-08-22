@@ -1,0 +1,22 @@
+POST WITH-NULL-MUSIC-EVENT-ID
+---------------------
+curl -i \
+-d '{"musicEventId":1,"musicEventType": "CREATE","music":{"musicId":456,"musicName":"Gala Bunga Matahari","musicAuthor":"Sal Priadi"}}' \
+-H "Content-Type: application/json" \
+-X POST http://localhost:8099/v1/music-event
+
+PUT WITH ID - 1
+--------------
+curl -i \
+-d '{"musicEventId":1,"musicEventType": "UPDATE","music":{"musicId":456,"musicName":"Gala Bunga Matahari","musicAuthor":"Sal Priadi"}}' \
+-H "Content-Type: application/json" \
+-X PUT http://localhost:8088/v1/music-event
+
+PUT WITH ID - 2
+--------------
+curl -i \
+-d '{"musicEventId":2,"musicEventType": "UPDATE","music":{"musicId":456,"musicName":"Gala Bunga Matahari","musicAuthor":"Sal Priadi"}}' \
+-H "Content-Type: application/json" \
+-X PUT http://localhost:8088/v1/music-event
+
+./kafka-topics.sh --create --topic library-events.DLT --replication-factor 1 --partitions 4 --bootstrap-server localhost:9092

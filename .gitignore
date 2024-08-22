@@ -26,3 +26,35 @@ replay_pid*
 # idea project files
 .idea/
 data/*
+
+*/target/
+target
+!.mvn/wrapper/maven-wrapper.jar
+.DS_Store
+*.class
+*.jar
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+## Generated Files ##
+*.log*
+
+## Env File
+*.env
+
+## Visual Studio Code
+.vscode
+

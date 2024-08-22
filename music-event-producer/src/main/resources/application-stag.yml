@@ -1,0 +1,13 @@
+server:
+  port: 8098
+spring:
+  application:
+    name: music-event-producer
+  config:
+    activate:
+      on-profile: stag
+  kafka:
+    producer:
+      bootstrap-servers: stagingkafka:9092, stagingkafka:9093, stagingkafka:9094
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer

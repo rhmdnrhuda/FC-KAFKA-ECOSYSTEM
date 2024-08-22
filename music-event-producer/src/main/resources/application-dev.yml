@@ -1,0 +1,26 @@
+server:
+  port: 8099
+logging:
+  level:
+    root: INFO
+    com.example: DEBUG
+spring:
+  application:
+    name: music-event-producer
+  config:
+    activate:
+      on-profile: dev
+  kafka:
+    topic: music-events
+    producer:
+      bootstrap-servers: localhost:9092, localhost:9093, localhost:9094
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        acks: 1
+        retries: 3
+        retry.backoff.ms: 10
+        batch.size: 8192
+    admin:
+      properties:
+        bootstrap.servers: localhost:9092, localhost:9093, localhost:9094
