@@ -20,3 +20,4 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: music-events-listener-group
+      max-poll-records: 3

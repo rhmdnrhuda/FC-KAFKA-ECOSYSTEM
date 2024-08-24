@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @Slf4j
 public class MusicEventConsumer {
@@ -16,9 +18,16 @@ public class MusicEventConsumer {
   @Autowired
   ObjectMapper objectMapper;
 
-  @KafkaListener(topics = "music-events")
-  private void onMessage(ConsumerRecord<String, String> consumerRecord)  throws JsonProcessingException {
-    processMusicEvent(consumerRecord);
+  @KafkaListener(topics = "music-events", containerFactory = "batchListenerContainerFactory")
+  private void onMessage(List<ConsumerRecord<String, String>> consumerRecord)  throws JsonProcessingException {
+    log.info("Consumer Record : {} ", consumerRecord);
+    consumerRecord.forEach(record -> {
+      try {
+        processMusicEvent(record);
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
+    });
   }
 
   private void processMusicEvent(ConsumerRecord<String, String> consumerRecord) throws JsonProcessingException {
