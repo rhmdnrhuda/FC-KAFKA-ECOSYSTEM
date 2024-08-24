@@ -4,12 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kafkademo.domain.MusicEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.apache.kafka.common.TopicPartition;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -18,16 +25,26 @@ public class MusicEventConsumer {
   @Autowired
   ObjectMapper objectMapper;
 
-  @KafkaListener(topics = "music-events", containerFactory = "batchListenerContainerFactory")
-  private void onMessage(List<ConsumerRecord<String, String>> consumerRecord)  throws JsonProcessingException {
-    log.info("Consumer Record : {} ", consumerRecord);
-    consumerRecord.forEach(record -> {
-      try {
-        processMusicEvent(record);
-      } catch (JsonProcessingException e) {
-        e.printStackTrace();
-      }
-    });
+//  @KafkaListener(topics = "music-events", containerFactory = "kafkaListenerContainerFactory")
+//  private void onMessage(ConsumerRecord<String, String> record)  throws JsonProcessingException {
+//    log.info("Consumer Record : {} ", record);
+//    processMusicEvent(record);
+//  }
+
+
+  @KafkaListener(topics = "music-events", containerFactory = "kafkaListenerContainerFactory")
+  public void onMessage(ConsumerRecord<String, String> record,
+                        Consumer<String, String> consumer) throws JsonProcessingException {
+    System.out.println("Processing message: " + record.value());
+    processMusicEvent(record);
+    // Create a TopicPartition instance
+    TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+
+    // Create OffsetAndMetadata instance for committing the offset
+    OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(record.offset() + 1);
+
+    // Commit the offset manually
+    consumer.commitSync(Collections.singletonMap(topicPartition, offsetAndMetadata));
   }
 
   private void processMusicEvent(ConsumerRecord<String, String> consumerRecord) throws JsonProcessingException {

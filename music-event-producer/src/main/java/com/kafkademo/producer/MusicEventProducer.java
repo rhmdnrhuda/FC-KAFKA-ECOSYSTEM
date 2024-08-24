@@ -34,19 +34,29 @@ public class MusicEventProducer {
 
     String value = objectMapper.writeValueAsString(musicEvent);
 
-    for (int i = 0; i < 10; i++) {
-      String key = "music-event-" +  "msg-" + i + "-"+ musicEvent.musicEventId().toString();
-      kafkaTemplate.send(buildProducerRecord(key, value, topic))
-              .whenComplete((sendResult, throwable) -> {
-                if (throwable != null) {
-                  handleFailure(key, value, throwable);
-                } else {
-                  handleSuccess(key, value, sendResult);
-                }
-              });
-    }
+//    for (int i = 0; i < 10; i++) {
+//      String key = "music-event-" +  "msg-" + i + "-"+ musicEvent.musicEventId().toString();
+//      kafkaTemplate.send(buildProducerRecord(key, value, topic))
+//              .whenComplete((sendResult, throwable) -> {
+//                if (throwable != null) {
+//                  handleFailure(key, value, throwable);
+//                } else {
+//                  handleSuccess(key, value, sendResult);
+//                }
+//              });
+//    }
 
-    return null;
+    String key = "offset-manual-music-event-" + musicEvent.musicEventId().toString();
+
+    return
+    kafkaTemplate.send(buildProducerRecord(key, value, topic))
+            .whenComplete((sendResult, throwable) -> {
+              if (throwable != null) {
+                handleFailure(key, value, throwable);
+              } else {
+                handleSuccess(key, value, sendResult);
+              }
+            });
   }
 
   private ProducerRecord<String, String> buildProducerRecord(String key, String value, String topic) {
