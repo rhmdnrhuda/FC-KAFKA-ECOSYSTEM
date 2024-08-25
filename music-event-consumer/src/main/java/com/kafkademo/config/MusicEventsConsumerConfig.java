@@ -30,7 +30,7 @@ public class MusicEventsConsumerConfig {
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "music-events-listener-group-2");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "music-events-listener-group");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "10"); // setiap batch itu max 3 record
@@ -49,8 +49,7 @@ public class MusicEventsConsumerConfig {
         factory.setConsumerFactory(consumerFactory());
         // Ack mode = Batch
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // spring kafka
+        factory.setConcurrency(2);
         return factory;
     }
-
-
 }
