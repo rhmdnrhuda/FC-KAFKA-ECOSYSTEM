@@ -11,16 +11,16 @@ spring:
     activate:
       on-profile: dev
   kafka:
-    topic: music-events
+    topic: topic-new
     producer:
       bootstrap-servers: localhost:9092, localhost:9093, localhost:9094
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
-        acks: 1
-        retries: 3
-        retry.backoff.ms: 10
-        batch.size: 8192
+        acks: all
+        enable.idempotence: true
+      transaction-id-prefix: music-event-producer-
+      retries: 1
     admin:
       properties:
         bootstrap.servers: localhost:9092, localhost:9093, localhost:9094

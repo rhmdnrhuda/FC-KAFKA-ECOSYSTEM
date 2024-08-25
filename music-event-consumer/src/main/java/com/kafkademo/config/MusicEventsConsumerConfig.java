@@ -37,6 +37,9 @@ public class MusicEventsConsumerConfig {
 
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false); // auto commit off
 
+
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
