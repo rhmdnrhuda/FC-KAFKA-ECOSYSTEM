@@ -25,27 +25,38 @@ public class MusicEventConsumer {
   @Autowired
   ObjectMapper objectMapper;
 
-//  @KafkaListener(topics = "music-events", containerFactory = "kafkaListenerContainerFactory")
-//  private void onMessage(ConsumerRecord<String, String> record)  throws JsonProcessingException {
-//    log.info("Consumer Record : {} ", record);
-//    processMusicEvent(record);
-//  }
+  Integer count = 0;
 
-
-  @KafkaListener(topics = "music-events", containerFactory = "kafkaListenerContainerFactory")
-  public void onMessage(ConsumerRecord<String, String> record,
-                        Consumer<String, String> consumer) throws JsonProcessingException {
-    System.out.println("Processing message: " + record.value());
+  @KafkaListener(topics = "music-events-2" , containerFactory = "kafkaListenerContainerFactory")
+  private void onMessage(ConsumerRecord<String, String> record,
+                         Consumer<String, String> consumer,
+                         Acknowledgment acknowledgment)  throws JsonProcessingException {
+    log.info("Consumer Record : {} ", record);
     processMusicEvent(record);
-    // Create a TopicPartition instance
-    TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
 
-    // Create OffsetAndMetadata instance for committing the offset
-    OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(record.offset() + 1);
-
-    // Commit the offset manually
-    consumer.commitSync(Collections.singletonMap(topicPartition, offsetAndMetadata));
+    if (count % 2 == 0) { // simulasi -> error dari processMusicEvent -> retry
+      consumer.commitSync(); // commit offset
+//      acknowledgment.acknowledge();
+    } else {
+      log.info("Message not acknowledged : {} ", record);
+    }
+    count++;
   }
+
+//  @KafkaListener(topics = "music-events", containerFactory = "kafkaListenerContainerFactory")
+//  public void onMessage(ConsumerRecord<String, String> record,
+//                        Consumer<String, String> consumer) throws JsonProcessingException {
+//    System.out.println("Processing message: " + record.value());
+//    processMusicEvent(record);
+//    // Create a TopicPartition instance
+//    TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+//
+//    // Create OffsetAndMetadata instance for committing the offset
+//    OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(record.offset() + 1);
+//
+//    // Commit the offset manually
+//    consumer.commitSync(Collections.singletonMap(topicPartition, offsetAndMetadata));
+//  }
 
   private void processMusicEvent(ConsumerRecord<String, String> consumerRecord) throws JsonProcessingException {
     MusicEvent musicEvent = objectMapper.readValue(consumerRecord.value(), MusicEvent.class);

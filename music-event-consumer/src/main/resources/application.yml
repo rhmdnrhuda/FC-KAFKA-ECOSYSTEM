@@ -19,5 +19,4 @@ spring:
       bootstrap-servers: localhost:9092, localhost:9093, localhost:9094
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      group-id: music-events-listener-group
-      max-poll-records: 3
+      group-id: music-events-listener-group-2

@@ -30,12 +30,14 @@ public class MusicEventsConsumerConfig {
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "music-events-listener-group");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "music-events-listener-group-2");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "10"); // setiap batch itu max 3 record
 
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false); // auto commit off
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+//        props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 5000);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
@@ -45,7 +47,8 @@ public class MusicEventsConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // ack mode = manual
+        // Ack mode = Batch
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL); // spring kafka
         return factory;
     }
 
