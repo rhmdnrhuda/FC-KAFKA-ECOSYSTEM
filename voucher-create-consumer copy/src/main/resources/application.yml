@@ -1,0 +1,22 @@
+server:
+  port: 8001
+spring:
+  kafka:
+   consumer:
+     bootstrap-servers: localhost:9092, localhost:9093, localhost:9094
+     group-id: voucher-consumer-create-group
+  datasource:
+    url: jdbc:mysql://localhost:3307/voucher_db
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
