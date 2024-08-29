@@ -1,0 +1,16 @@
+filebeat.inputs:
+  - type: log
+    paths:
+      - ./log/*.log
+
+#output.logstash:
+#  hosts: ["logstash:5044"]
+
+output.kafka:
+  hosts: ["kafka1:19092"]  # Kafka broker address
+  topic: "filebeat-logs" # The Kafka topic where logs will be sent
+  partition.round_robin:
+    reachable_only: false
+  required_acks: 1
+  compression: none
+  max_message_bytes: 1000000

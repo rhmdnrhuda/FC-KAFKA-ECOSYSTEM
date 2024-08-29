@@ -1,0 +1,23 @@
+server.name: kibana
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.username: "elastic"
+elasticsearch.password: "123123"
+
+
+
+
+
+
+
+
+
+
+
+# Encryption keys
+xpack.security.encryptionKey: "a_random_string_of_at_least_32_characters"
+xpack.reporting.encryptionKey: "another_random_string_of_at_least_32_characters"
+xpack.encryptedSavedObjects.encryptionKey: "yet_another_random_string_of_at_least_32_characters"
+
+# Disable interactive setup
+xpack.security.authc.providers: [ "basic", "token" ]
