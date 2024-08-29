@@ -24,21 +24,24 @@ public class MusicEventConsumer {
 
 
   List<MusicDB> musics = new ArrayList<>();
-  Integer id = 1;
+  // kafka -> key dan value
 
-  Set<String> processedKeys = new HashSet<>();
+  Set<String> keys = new HashSet<>();
 
   @KafkaListener(topics = "music-events", containerFactory = "kafkaListenerContainerFactory")
   public void onMessage(ConsumerRecord<String, String> record,
                         Consumer<String, String> consumer) throws JsonProcessingException {
 
-    // check key already proceed or not
-    if (processedKeys.contains(record.key())) {
-      log.info("Key already processed");
+    System.out.println("Processing message: " + record.value());
+
+    if (keys.contains(record.key())) {
+      log.info("Key already exist: {}", record.key());
+      //      update music data sesuai id yang dikirim
       return;
     }
 
-    System.out.println("Processing message: " + record.value());
+    keys.add(record.key());
+
     processMusicEvent(record);
     // Create a TopicPartition instance
     TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
@@ -59,14 +62,7 @@ public class MusicEventConsumer {
       case CREATE:
         log.info("Music Event Created");
         MusicDB music = new MusicDB(musicEvent.music().musicId(), musicEvent.music().musicName(), musicEvent.music().musicAuthor());
-        if (isExist(musicEvent.music().musicId())) {
-            log.info("Music Event Already Exist");
-            // update data in DB
-            break;
-        }
-        // Save to DB
-        musics.add(music);
-        id++;
+        musics.add(music); // simlasi DB insert
 
         break;
       case UPDATE:

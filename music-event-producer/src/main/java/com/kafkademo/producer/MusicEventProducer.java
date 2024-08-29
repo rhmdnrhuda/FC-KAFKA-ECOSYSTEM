@@ -32,24 +32,21 @@ public class MusicEventProducer {
     }
 
     public CompletableFuture<SendResult<String, String>> sendMusicEvent(MusicEvent musicEvent) throws JsonProcessingException {
-        for (int i = 1; i < 100; i++) {
-            String value = "value-" + i;
-            String key = "music-event-" + i + musicEvent.musicEventId().toString();
+        String value = objectMapper.writeValueAsString(musicEvent);
+        String key = "music-event-" + musicEvent.musicEventId().toString();
 
-            kafkaTemplate.executeInTransaction(operations -> {
-                CompletableFuture<SendResult<String, String>> future = operations.send(buildProducerRecord(key, value, topic));
-                future.whenComplete((sendResult, throwable) -> {
-                    if (throwable == null) {
-                        handleSuccess(key, value, sendResult);
-                    } else {
-                        handleFailure(key, value, throwable);
-                        throw new RuntimeException("Failed to send message", throwable); // Propagate exception for rollback
-                    }
-                });
-                return future;
+        return kafkaTemplate.executeInTransaction(operations -> {
+            CompletableFuture<SendResult<String, String>> future = operations.send(buildProducerRecord(key, value, topic));
+            future.whenComplete((sendResult, throwable) -> {
+                if (throwable == null) {
+                    handleSuccess(key, value, sendResult);
+                } else {
+                    handleFailure(key, value, throwable);
+                    throw new RuntimeException("Failed to send message", throwable); // Propagate exception for rollback
+                }
             });
-        }
-       return null;
+            return future;
+        });
     }
 
     private ProducerRecord<String, String> buildProducerRecord(String key, String value, String topic) {
