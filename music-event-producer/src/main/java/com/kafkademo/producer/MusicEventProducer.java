@@ -4,17 +4,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kafkademo.domain.MusicEvent;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Slf4j
@@ -29,28 +32,41 @@ public class MusicEventProducer {
     public MusicEventProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+
+        // Configure retries and backoff
+        props.put(ProducerConfig.RETRIES_CONFIG, 3);
+        props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 101);
+        props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 102);
+        props.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 1000);
+
+        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 10000); // 10 seconds
+        KafkaProducer<String, String> producer = new KafkaProducer<>(props);
+        this.producer = producer;
     }
+
+    private final KafkaProducer<String, String> producer;
 
     public CompletableFuture<SendResult<String, String>> sendMusicEvent(MusicEvent musicEvent) throws JsonProcessingException {
-        for (int i = 1; i < 2; i++) {
-            String value = "value-" + i;
-            String key = "music-event-" + i + musicEvent.musicEventId().toString();
 
-            kafkaTemplate.executeInTransaction(operations -> {
-                CompletableFuture<SendResult<String, String>> future = operations.send(buildProducerRecord(key, value, topic));
-                future.whenComplete((sendResult, throwable) -> {
-                    if (throwable == null) {
-                        handleSuccess(key, value, sendResult);
-                    } else {
-                        handleFailure(key, value, throwable);
-                        throw new RuntimeException("Failed to send message", throwable); // Propagate exception for rollback
-                    }
-                });
-                return future;
+        for (int i = 1; i <= 2; i++) {
+            ProducerRecord<String, String> record = new ProducerRecord<>("topic-test-ya", "key#" + i, "value#" + i);
+            long startTime = System.currentTimeMillis();
+            producer.send(record, (metadata, exception) -> {
+                long endTime = System.currentTimeMillis();
+                if (exception == null) {
+                    System.out.println("Message sent successfully to topic " + metadata.topic() + " partition " + metadata.partition() + " offset " + metadata.offset() + " in " + (endTime - startTime) + " ms");
+                } else {
+                    System.err.println("Error sending message: " + exception.getMessage());
+                }
             });
         }
-       return null;
-    }
+
+        return null;
+}
 
     private ProducerRecord<String, String> buildProducerRecord(String key, String value, String topic) {
         List<Header> headers = List.of(

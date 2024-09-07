@@ -18,9 +18,15 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
         acks: all
-        enable.idempotence: true
-      transaction-id-prefix: music-event-producer-
-      retries: 1
+        retries: 3
+        properties:
+          retry.backoff.ms: 97
+          max:
+            block:
+              ms: 1000
+    #        enable.idempotence: true
+#      transaction-id-prefix: music-event-producer-
+#      retries: 1
     admin:
       properties:
         bootstrap.servers: localhost:9092, localhost:9093, localhost:9094
