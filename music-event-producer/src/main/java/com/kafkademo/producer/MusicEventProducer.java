@@ -32,7 +32,7 @@ public class MusicEventProducer {
     }
 
     public CompletableFuture<SendResult<String, String>> sendMusicEvent(MusicEvent musicEvent) throws JsonProcessingException {
-        for (int i = 1; i < 100; i++) {
+        for (int i = 1; i < 2; i++) {
             String value = "value-" + i;
             String key = "music-event-" + i + musicEvent.musicEventId().toString();
 
