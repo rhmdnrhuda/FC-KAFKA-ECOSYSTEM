@@ -1,0 +1,28 @@
+-- Step 1: Create the transactions stream
+CREATE STREAM transaction_stream (
+    id STRING,
+    amount DOUBLE,
+    accountId STRING,
+    timestamp STRING
+) WITH (
+    KAFKA_TOPIC='transactions',
+    VALUE_FORMAT='JSON'
+);
+
+-- Step 2: Create the table to track anomaly count by account
+CREATE TABLE anomaly_count_table AS 
+SELECT 
+    accountId, 
+    COUNT(*) AS anomaly_count 
+FROM transaction_stream
+WHERE amount > 10000
+GROUP BY accountId;
+
+-- Step 3: Create a filtered stream for anomaly transactions
+CREATE STREAM filtered_anomaly_transactions_stream AS
+SELECT t.id, t.amount, t.accountId, t.timestamp
+FROM transaction_stream t
+LEFT JOIN anomaly_count_table a
+ON t.accountId = a.accountId
+WHERE t.amount > 10000
+AND a.anomaly_count IS NOT NULL;
