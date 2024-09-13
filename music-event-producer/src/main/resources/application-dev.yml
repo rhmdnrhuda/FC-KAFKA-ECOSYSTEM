@@ -16,11 +16,10 @@ spring:
       bootstrap-servers: localhost:9092, localhost:9093, localhost:9094
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      properties:
-        acks: 1
-        retries: 3
-        retry.backoff.ms: 10
-        batch.size: 8192
+#      properties:
+
     admin:
       properties:
         bootstrap.servers: localhost:9092, localhost:9093, localhost:9094
+        retries: 2
+        retry.backoff.ms: 1000
