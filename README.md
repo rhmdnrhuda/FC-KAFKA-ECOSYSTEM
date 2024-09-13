@@ -1,98 +1,129 @@
 # FC-Kafka-Ecosystem
-## Part 01 - CH 02 : Basic Concepts and Understanding of Apache Kafka
+## Part 04 - CH 03 : Basic Concepts and Understanding of Apache Kafka
 
-### Demo Producer and Consumer
-- Navigate to the path where the **docker-compose.yml** is located and then run the below command.
+
+### build the image with the following command:
 ```
-docker-compose up
-```
-
-## Producer and Consume the Messages
-
-- Let's going to the container by running the below command.
-
-```
-docker exec -it kafka1 bash
+docker build -t custom-kafka-connect-image -f Dockerfile.kafka-connect .
 ```
 
-- Create a Kafka topic using the **kafka-topics** command.
-    - **kafka1:19092** refers to the **KAFKA_ADVERTISED_LISTENERS** in the docker-compose.yml file.
+### Check installed connector plugins
+```
+curl --location 'http://localhost:8083/connector-plugins'
 
 ```
-kafka-topics --bootstrap-server kafka1:19092 \
-             --create \
-             --topic test-topic \
-             --replication-factor 1 --partitions 1
+sample response when success:
+```
+[
+    {
+        "class": "io.debezium.connector.mysql.MySqlConnector",
+        "type": "source",
+        "version": "2.2.0.Final"
+    },
+    {
+        "class": "org.apache.kafka.connect.mirror.MirrorCheckpointConnector",
+        "type": "source",
+        "version": "7.3.2-ccs"
+    },
+    {
+        "class": "org.apache.kafka.connect.mirror.MirrorHeartbeatConnector",
+        "type": "source",
+        "version": "7.3.2-ccs"
+    },
+    {
+        "class": "org.apache.kafka.connect.mirror.MirrorSourceConnector",
+        "type": "source",
+        "version": "7.3.2-ccs"
+    }
+]
 ```
 
-- Produce Messages to the topic.
-
+### Curl to validate debezium connector for mysql
 ```
-docker exec --interactive --tty kafka1  \
-kafka-console-producer --bootstrap-server kafka1:19092 \
-                       --topic test-topic
-```
-
-- Consume Messages from the topic.
-
-```
-docker exec --interactive --tty kafka1  \
-kafka-console-consumer --bootstrap-server kafka1:19092 \
-                       --topic test-topic \
-                       --from-beginning
-```
-
-## Producer and Consume the Messages With Key and Value
-
-- Produce Messages with Key and Value to the topic.
-
-```
-docker exec --interactive --tty kafka1  \
-kafka-console-producer --bootstrap-server kafka1:19092 \
-                       --topic test-topic \
-                       --property "key.separator=-" --property "parse.key=true"
+curl --location --request PUT 'http://localhost:8083/connector-plugins/io.debezium.connector.mysql.MySqlConnector/config/validate' \
+--header 'Content-Type: application/json' \
+--data '{
+  "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+  "tasks.max": "1",
+  "database.hostname": "mysql-db-host",
+  "database.port": "3306",
+  "database.user": "dbuser",
+  "database.password": "dbpassword",
+  "database.server.id": "184054",
+  "database.server.name": "dbserver1",
+  "database.whitelist": "testdb",
+  "table.whitelist": "testdb.testtable",
+  "topic.prefix": "mysql-testdb-"
+}'
 ```
 
-- Consuming messages with Key and Value from a topic.
-
+### CURL to create a connector: mysql-connector
 ```
-docker exec --interactive --tty kafka1  \
-kafka-console-consumer --bootstrap-server kafka1:19092 \
-                       --topic test-topic \
-                       --from-beginning \
-                       --property "key.separator= - " --property "print.key=true"
-```
-
-### Consume Messages using Consumer Groups
-
-
-```
-docker exec --interactive --tty kafka1  \
-kafka-console-consumer --bootstrap-server kafka1:19092 \
-                       --topic test-topic --group console-consumer-41911\
-                       --property "key.separator= - " --property "print.key=true"
-```
-
-- Example Messages:
-
-```
-a-abc
-b-bus
+curl --location 'http://localhost:8083/connectors' \
+--header 'Content-Type: application/json' \
+--data '{
+  "name": "mysql-source-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "tasks.max": "1",
+    "database.hostname": "mysql-container",
+    "database.port": "3306",
+    "database.user": "testuser",
+    "database.password": "testpassword",
+    "database.server.id": "184054",
+    "database.server.name": "dbserver1",
+    "database.whitelist": "testdb",
+    "table.whitelist": "testdb.testtable",
+    "topic.prefix": "mysql-testdb-"
+  }
+}
+'
 ```
 
-### Consume Messages With Headers
+### CURL to update config connector based on the connector name
+```
+curl --location --request PUT 'http://localhost:8083/connectors/mysql-source-connector/config' \
+--header 'Content-Type: application/json' \
+--data '{
+  "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+  "tasks.max": "1",
+  "database.hostname": "mysql-container",
+  "database.port": "3306",
+  "database.user": "testuser",
+  "database.password": "testpassword",
+  "database.server.id": "184054",
+  "database.server.name": "dbserver1",
+  "database.whitelist": "testdb",
+  "table.whitelist": "testdb.testtable",
+  "topic.prefix": "mysql-testdb-",
+  "schema.history.internal.kafka.bootstrap.servers": "kafka1:19092",
+  "schema.history.internal.kafka.topic": "dbserver1-schema-history",
+  "database.allowPublicKeyRetrieval": "true"
+}'
+```
+
+### Create table and insert samples data
+```
+CREATE TABLE testtable (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           data VARCHAR(255) NOT NULL
+);
+
+INSERT INTO testtable (data) VALUES ('Sample Data 3'), ('Sample Data 4');
+```
+
+
+### Grant access the user to the database
+```
+1. docker exec -it mysql-container mysql -u root -p 
+2. root password: rootpassword (inside the docker-compose file)
+3. GRANT RELOAD, FLUSH_TABLES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'testuser'@'%'; 
+FLUSH PRIVILEGES;
+4. Restart the Debezium Connector using curl command
 
 ```
-docker exec --interactive --tty kafka1  \
-kafka-console-consumer --bootstrap-server kafka1:19092 \
-                       --topic library-events.DLT \
-                       --property "print.headers=true" --property "print.timestamp=true" 
-```
 
-- Example Messages:
-
+### Restart Debezium connector
 ```
-a-abc
-b-bus
+curl --location --request POST 'http://localhost:8083/connectors/mysql-source-connector/restart'
 ```
-

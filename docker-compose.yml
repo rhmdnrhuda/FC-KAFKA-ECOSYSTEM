@@ -35,7 +35,7 @@ services:
       - elk
 
   connect:
-    image: confluentinc/cp-kafka-connect:7.3.2
+    image: custom-kafka-connect-image
     container_name: kafka-connect
     ports:
       - "8083:8083"
@@ -58,11 +58,29 @@ services:
       - kafka1
     networks:
       - elk
+      - mysql-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpassword
+    ports:
+      - "3306:3306"
+    networks:
+      - mysql-network
+      - elk
+    volumes:
+      - mysql-data:/var/lib/mysql
 
 networks:
   elk:
     driver: bridge
+  mysql-network:
+    driver: bridge
 
-
-
-
+volumes:
+  mysql-data:

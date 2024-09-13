@@ -1,8 +1,5 @@
-FROM confluentinc/cp-kafka-connect:6.2.0
+FROM confluentinc/cp-kafka-connect:7.3.2
 
-# Remove the slf4j-simple binding
-RUN rm -f /usr/share/java/cp-base-new/slf4j-simple-1.7.30.jar
-
-# Copy custom log4j properties for proper logging
-COPY log4j.properties /usr/share/java/cp-base-new/
-COPY log4j.properties /usr/share/java/cp-base-new/log4j.properties
+# Alternative manual installation of Debezium MySQL connector
+RUN mkdir -p /usr/share/java/debezium
+RUN curl -sSL https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/2.2.0.Final/debezium-connector-mysql-2.2.0.Final-plugin.tar.gz | tar -xvz -C /usr/share/java/debezium
