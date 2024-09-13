@@ -1,0 +1,8 @@
+FROM confluentinc/cp-kafka-connect:6.2.0
+
+# Remove the slf4j-simple binding
+RUN rm -f /usr/share/java/cp-base-new/slf4j-simple-1.7.30.jar
+
+# Copy custom log4j properties for proper logging
+COPY log4j.properties /usr/share/java/cp-base-new/
+COPY log4j.properties /usr/share/java/cp-base-new/log4j.properties

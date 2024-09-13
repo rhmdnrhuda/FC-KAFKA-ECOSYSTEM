@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3.8'
 
 services:
   zookeeper1:
@@ -9,8 +9,7 @@ services:
       - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_SERVER_ID: 1
-      ZOOKEEPER_SERVERS: zookeeper1:2888:3888
+      ZOOKEEPER_TICK_TIME: 2000
     networks:
       - elk
 
@@ -35,73 +34,30 @@ services:
     networks:
       - elk
 
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:8.5.2
-    volumes:
-      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - ./log/:/usr/share/filebeat/log/:ro  # Mount the local log directory
+  connect:
+    image: confluentinc/cp-kafka-connect:7.3.2
+    container_name: kafka-connect
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: host.docker.internal:29092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: "connect-cluster"
+      CONNECT_CONFIG_STORAGE_TOPIC: "connect-config"
+      CONNECT_OFFSET_STORAGE_TOPIC: "connect-offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "connect-status"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
     depends_on:
       - kafka1
-    command: filebeat -e -d "*"
     networks:
       - elk
-
-  kafka-ui-web:
-    image: provectuslabs/kafka-ui
-    container_name: kafka-ui-web
-    depends_on:
-      - kafka1
-    ports:
-      - "8080:8080"
-    restart: "no"
-    environment:
-      - KAFKA_CLUSTERS_0_NAME=new-cluster
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka1:19092
-      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper1:2181
-      - KAFKA_CLUSTERS_0_READONLY=false
-    networks:
-      - elk
-
-  elasticsearch:
-    image: elasticsearch:8.5.2
-    environment:
-      - discovery.type=single-node
-    ports:
-      - 9200:9200
-      - 9300:9300
-    volumes:
-      - es-data:/usr/share/elasticsearch/data
-    networks:
-      - elk
-
-  logstash:
-    image: logstash:8.5.2
-    ports:
-      - "5044:5044"
-    environment:
-      - ELASTICSEARCH_USERNAME=elastic
-      - ELASTICSEARCH_PASSWORD=123123
-      - TZ=Asia/Jakarta
-    depends_on:
-      - elasticsearch
-    volumes:
-      - ./logstash.conf:/usr/share/logstash/config/logstash.conf
-    networks:
-      - elk
-
-  kibana:
-      image: kibana:8.5.2
-      ports:
-        - 5601:5601
-      environment:
-        - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-        - ELASTICSEARCH_USERNAME=kibana_user
-        - ELASTICSEARCH_PASSWORD="123123"
-      networks:
-        - elk
-
-volumes:
-  es-data:
 
 networks:
   elk:
