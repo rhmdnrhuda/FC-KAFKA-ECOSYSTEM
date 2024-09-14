@@ -25,3 +25,5 @@ replay_pid*
 
 # idea project files
 .idea/
+data/
+.DS_Store

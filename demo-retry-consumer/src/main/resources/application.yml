@@ -1,0 +1,23 @@
+server:
+  port: 9096
+logging:
+  level:
+    root: INFO
+    com.example: DEBUG
+topics:
+  retry-topic: kafka-example-RETRY
+  retry-topic-dlt: kafka-example-DLT
+  tracking-topic: kafka-example-TRACKING
+groupId:
+  retry-consumer-group: demo-retry-consumer-one
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/kafka-example
+  application:
+    name: demo-retry-consumer
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092, localhost:9093, localhost:9094
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer

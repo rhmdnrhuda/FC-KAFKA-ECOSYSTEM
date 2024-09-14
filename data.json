@@ -1,0 +1,63 @@
+[
+    {
+      "id": "tx001",
+      "amount": 1500.75,
+      "accountId": "acct001",
+      "timestamp": "2024-09-09T10:15:30Z"
+    },
+    {
+      "id": "tx002",
+      "amount": 500.00,
+      "accountId": "acct002",
+      "timestamp": "2024-09-09T11:00:00Z"
+    },
+    {
+      "id": "tx003",
+      "amount": 12500.50,
+      "accountId": "acct003",
+      "timestamp": "2024-09-09T11:30:45Z"
+    },
+    {
+      "id": "tx004",
+      "amount": 200.25,
+      "accountId": "acct001",
+      "timestamp": "2024-09-09T12:00:15Z"
+    },
+    {
+      "id": "tx005",
+      "amount": 8000.00,
+      "accountId": "acct002",
+      "timestamp": "2024-09-09T12:30:30Z"
+    },
+    {
+      "id": "tx006",
+      "amount": 15000.00,
+      "accountId": "acct004",
+      "timestamp": "2024-09-09T13:45:50Z"
+    },
+    {
+      "id": "tx007",
+      "amount": 600.00,
+      "accountId": "acct003",
+      "timestamp": "2024-09-09T14:10:10Z"
+    },
+    {
+      "id": "tx008",
+      "amount": 18000.00,
+      "accountId": "acct005",
+      "timestamp": "2024-09-09T14:40:25Z"
+    },
+    {
+      "id": "tx009",
+      "amount": 50.75,
+      "accountId": "acct001",
+      "timestamp": "2024-09-09T15:00:50Z"
+    },
+    {
+      "id": "tx010",
+      "amount": 12000.00,
+      "accountId": "acct004",
+      "timestamp": "2024-09-09T15:30:15Z"
+    }
+  ]
+  
