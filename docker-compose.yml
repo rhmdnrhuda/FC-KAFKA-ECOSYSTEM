@@ -54,8 +54,13 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_JDBC_URL: jdbc:mysql://mysql-container:3306/testdb
+      CONNECT_JDBC_USER: testuser
+      CONNECT_JDBC_PASSWORD: testpassword
+      CONNECT_CLASSPATH: /usr/share/java/mysql/mysql-connector-java-8.0.30.jar
     depends_on:
       - kafka1
+      - mysql
     networks:
       - elk
       - mysql-network

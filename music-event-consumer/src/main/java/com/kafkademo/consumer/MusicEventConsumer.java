@@ -28,7 +28,7 @@ public class MusicEventConsumer {
   @Autowired
   ObjectMapper objectMapper;
 
-  @KafkaListener(topics = "music-events" , containerFactory = "kafkaListenerContainerFactory")
+  @KafkaListener(topics = "test-topic" , containerFactory = "kafkaListenerContainerFactory")
   private void onMessage(ConsumerRecord<String, String> record,
                          Acknowledgment acknowledgment)  throws JsonProcessingException {
     processMusicEvent(record);

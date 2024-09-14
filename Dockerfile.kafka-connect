@@ -1,5 +1,17 @@
 FROM confluentinc/cp-kafka-connect:7.3.2
 
+VOLUME ["/usr/share/java/drivers"]
+
 # Alternative manual installation of Debezium MySQL connector
 RUN mkdir -p /usr/share/java/debezium
 RUN curl -sSL https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/2.2.0.Final/debezium-connector-mysql-2.2.0.Final-plugin.tar.gz | tar -xvz -C /usr/share/java/debezium
+
+# Install the JDBC Sink Connector
+RUN confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.2.0
+
+# Install the MySQL JDBC Driver
+RUN mkdir -p /usr/share/java/mysql
+RUN curl -sSL https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.30/mysql-connector-java-8.0.30.jar -o /usr/share/java/mysql/mysql-connector-java-8.0.30.jar
+
+# Set classpath for Kafka Connect
+ENV CLASSPATH=/usr/share/java/mysql/mysql-connector-java-8.0.30.jar

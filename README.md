@@ -1,10 +1,17 @@
 # FC-Kafka-Ecosystem
-## Part 04 - CH 03 : Basic Concepts and Understanding of Apache Kafka
-
+## Part 04 - CH 05 : Kafka Sink Connector Practice
 
 ### build the image with the following command:
 ```
 docker build -t custom-kafka-connect-image -f Dockerfile.kafka-connect .
+```
+
+### Create table to save data from kafka
+```
+CREATE TABLE kafka_messages (
+                                id INT PRIMARY KEY,
+                                message TEXT NOT NULL
+);
 ```
 
 ### Check installed connector plugins
@@ -57,59 +64,49 @@ curl --location --request PUT 'http://localhost:8083/connector-plugins/io.debezi
 }'
 ```
 
-### CURL to create a connector: mysql-connector
+### CURL to create a connector: mysql-sink-connector
 ```
 curl --location 'http://localhost:8083/connectors' \
 --header 'Content-Type: application/json' \
 --data '{
-  "name": "mysql-source-connector",
-  "config": {
-    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
-    "tasks.max": "1",
-    "database.hostname": "mysql-container",
-    "database.port": "3306",
-    "database.user": "testuser",
-    "database.password": "testpassword",
-    "database.server.id": "184054",
-    "database.server.name": "dbserver1",
-    "database.whitelist": "testdb",
-    "table.whitelist": "testdb.testtable",
-    "topic.prefix": "mysql-testdb-"
-  }
-}
-'
+    "name": "mysql-sink-connector",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "tasks.max": "1",
+        "topics": "jdbd-kafka-sync",
+        "connection.url": "jdbc:mysql://mysql-container:3306/testdb?user=testuser&password=testpassword",
+        "insert.mode": "insert",
+        "auto.create": "true",
+        "auto.evolve": "false",
+        "pk.mode": "none",
+        "table.name.format": "kafka_messages",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "true",
+        "connect.classpath": "/usr/share/java/mysql-connector-java-8.0.30.jar"
+    }
+}'
 ```
 
 ### CURL to update config connector based on the connector name
 ```
-curl --location --request PUT 'http://localhost:8083/connectors/mysql-source-connector/config' \
+curl --location --request PUT 'http://localhost:8083/connectors/mysql-sink-connector/config' \
 --header 'Content-Type: application/json' \
 --data '{
-  "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",
-  "database.hostname": "mysql-container",
-  "database.port": "3306",
-  "database.user": "testuser",
-  "database.password": "testpassword",
-  "database.server.id": "184054",
-  "database.server.name": "dbserver1",
-  "database.whitelist": "testdb",
-  "table.whitelist": "testdb.testtable",
-  "topic.prefix": "mysql-testdb-",
-  "schema.history.internal.kafka.bootstrap.servers": "kafka1:19092",
-  "schema.history.internal.kafka.topic": "dbserver1-schema-history",
-  "database.allowPublicKeyRetrieval": "true"
+  "topics": "jdbd-kafka-sync",
+  "connection.url": "jdbc:mysql://mysql-container:3306/testdb?user=testuser&password=testpassword",
+  "insert.mode": "insert",
+  "auto.create": "true",
+  "auto.evolve": "false",
+  "pk.mode": "none",
+  "table.name.format": "kafka_messages",
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "true",
+  "connect.classpath": "/usr/share/java/mysql-connector-java-8.0.30.jar"
 }'
-```
-
-### Create table and insert samples data
-```
-CREATE TABLE testtable (
-                           id INT AUTO_INCREMENT PRIMARY KEY,
-                           data VARCHAR(255) NOT NULL
-);
-
-INSERT INTO testtable (data) VALUES ('Sample Data 3'), ('Sample Data 4');
 ```
 
 
@@ -123,7 +120,7 @@ FLUSH PRIVILEGES;
 
 ```
 
-### Restart Debezium connector
+### Restart connector
 ```
-curl --location --request POST 'http://localhost:8083/connectors/mysql-source-connector/restart'
+curl --location --request POST 'http://localhost:8083/connectors/mysql-sink-connector/restart'
 ```
