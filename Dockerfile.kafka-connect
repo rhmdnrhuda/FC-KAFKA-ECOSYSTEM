@@ -13,5 +13,18 @@ RUN confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.2.0
 RUN mkdir -p /usr/share/java/mysql
 RUN curl -sSL https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.30/mysql-connector-java-8.0.30.jar -o /usr/share/java/mysql/mysql-connector-java-8.0.30.jar
 
+# Download Apache Kafka's default connectors
+RUN curl -O https://repo1.maven.org/maven2/org/apache/kafka/connect-file/3.8.0/connect-file-3.8.0.jar
+
+# Extract the downloaded tar file
+RUN mkdir -p /usr/share/java/kafka-file
+RUN mv connect-file-3.8.0.jar /usr/share/java/kafka-file/
+
+# Add custom SMT transformation JAR
+COPY music-event-producer/target/music-event-producer-0.0.1-SNAPSHOT.jar /usr/share/java/kafka-file/
+
+# Update plugin.path to include custom transformation
+RUN echo "plugin.path=/usr/share/java/kafka-file,/usr/share/java/custom-transforms" >> /etc/kafka/connect-distributed.properties
+
 # Set classpath for Kafka Connect
 ENV CLASSPATH=/usr/share/java/mysql/mysql-connector-java-8.0.30.jar

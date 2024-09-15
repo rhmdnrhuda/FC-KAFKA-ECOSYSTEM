@@ -58,12 +58,15 @@ services:
       CONNECT_JDBC_USER: testuser
       CONNECT_JDBC_PASSWORD: testpassword
       CONNECT_CLASSPATH: /usr/share/java/mysql/mysql-connector-java-8.0.30.jar
+      PLUGIN_PATH: /usr/share/java
     depends_on:
       - kafka1
       - mysql
     networks:
       - elk
       - mysql-network
+    volumes:
+      - /Users/rahmadnurhuda/Project/fast-campus/code/FC-KAFKA-ECOSYSTEM/log/:/usr/share/user-log/log/
 
   mysql:
     image: mysql:8.0
@@ -81,6 +84,21 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
 
+  kafka-ui-web:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui-web
+    depends_on:
+      - kafka1
+    ports:
+      - "8080:8080"
+    restart: "no"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=new-cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka1:19092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper1:2181
+      - KAFKA_CLUSTERS_0_READONLY=false
+    networks:
+        - elk
 networks:
   elk:
     driver: bridge

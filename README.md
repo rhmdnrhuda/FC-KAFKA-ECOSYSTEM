@@ -1,9 +1,40 @@
 # FC-Kafka-Ecosystem
-## Part 04 - CH 05 : Kafka Sink Connector Practice
+## Part 04 - CH 07 : Data Movement for User Behavior Log Analysis
+
 
 ### build the image with the following command:
 ```
 docker build -t custom-kafka-connect-image -f Dockerfile.kafka-connect .
+```
+
+### Mount directory file user-behavior.log to kafka-connect container
+```
+docker run -d \
+  --name=kafka-connect \
+  -v /Users/rahmadnurhuda/Project/fast-campus/code/FC-KAFKA-ECOSYSTEM/log:/mnt/logs \
+  -e CONNECT_BOOTSTRAP_SERVERS=kafka:9092 \
+  -e CONNECT_GROUP_ID="connect-cluster" \
+  -e CONNECT_CONFIG_STORAGE_TOPIC="connect-configs" \
+  -e CONNECT_OFFSET_STORAGE_TOPIC="connect-offsets" \
+  -e CONNECT_STATUS_STORAGE_TOPIC="connect-status" \
+  confluentinc/cp-kafka-connect:7.3.2
+```
+
+### Updated Connector Configuration:
+```
+{
+    "name": "file-source-connector",
+    "config": {
+      "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",
+      "file": "/usr/share/user-log/log/user-behavior.log",
+      "topic": "user_behavior_logs_new",
+      "tasks.max": "1",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "true",
+      "transforms": "StringToJson",
+      "transforms.StringToJson.type": "com.kafkademo.transforms.StringToJsonTransform"
+    }
+}
 ```
 
 ### Create table to save data from kafka
