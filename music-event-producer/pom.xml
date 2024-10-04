@@ -58,6 +58,26 @@
 			<artifactId>spring-kafka-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Confluent Kafka Avro Serializer -->
+		<dependency>
+			<groupId>io.confluent</groupId>
+			<artifactId>kafka-avro-serializer</artifactId>
+			<version>7.5.0</version>
+		</dependency>
+
+		<!-- Avro Dependency -->
+		<dependency>
+			<groupId>org.apache.avro</groupId>
+			<artifactId>avro</artifactId>
+			<version>1.11.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20210307</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -74,7 +94,31 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.avro</groupId>
+				<artifactId>avro-maven-plugin</artifactId>
+				<version>1.11.0</version> <!-- Use a version compatible with your Avro setup -->
+				<executions>
+					<execution>
+						<goals>
+							<goal>schema</goal> <!-- Goal to generate code from .avsc files -->
+						</goals>
+						<phase>generate-sources</phase> <!-- Ensure code is generated during the compile phase -->
+					</execution>
+				</executions>
+				<configuration>
+					<sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
+					<outputDirectory>${project.build.directory}/generated-sources/avro</outputDirectory>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
+
+	<repositories>
+		<repository>
+			<id>confluent</id>
+			<url>https://packages.confluent.io/maven/</url>
+		</repository>
+	</repositories>
 </project>

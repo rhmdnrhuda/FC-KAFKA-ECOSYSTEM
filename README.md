@@ -1,98 +1,107 @@
 # FC-Kafka-Ecosystem
-## Part 01 - CH 02 : Basic Concepts and Understanding of Apache Kafka
+## Part 06 
 
-### Demo Producer and Consumer
-- Navigate to the path where the **docker-compose.yml** is located and then run the below command.
+### Create a Kubernetes Cluster
 ```
-docker-compose up
-```
-
-## Producer and Consume the Messages
-
-- Let's going to the container by running the below command.
-
-```
-docker exec -it kafka1 bash
+gcloud container clusters create ${KUBERNETES_CLUSTER_PREFIX}-cluster \
+  --region ${REGION} \
+  --machine-type e2-small \
+  --num-nodes 1
 ```
 
-- Create a Kafka topic using the **kafka-topics** command.
-    - **kafka1:19092** refers to the **KAFKA_ADVERTISED_LISTENERS** in the docker-compose.yml file.
 
+### Install Strimzi Operator
 ```
-kafka-topics --bootstrap-server kafka1:19092 \
-             --create \
-             --topic test-topic \
-             --replication-factor 1 --partitions 1
-```
+helm repo add strimzi https://strimzi.io/charts/
 
-- Produce Messages to the topic.
+kubectl create ns kafka
 
-```
-docker exec --interactive --tty kafka1  \
-kafka-console-producer --bootstrap-server kafka1:19092 \
-                       --topic test-topic
+helm install strimzi-operator strimzi/strimzi-kafka-operator -n kafka
 ```
 
-- Consume Messages from the topic.
-
+### Kafka.yaml
 ```
-docker exec --interactive --tty kafka1  \
-kafka-console-consumer --bootstrap-server kafka1:19092 \
-                       --topic test-topic \
-                       --from-beginning
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+ name: controller
+ labels:
+   strimzi.io/cluster: my-cluster
+spec:
+ replicas: 3
+ roles:
+   - controller
+ storage:
+   type: jbod
+   volumes:
+     - id: 0
+       type: persistent-claim
+       size: 20Gi
+       deleteClaim: false
+---
+
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+ name: broker
+ labels:
+   strimzi.io/cluster: my-cluster
+spec:
+ replicas: 3
+ roles:
+   - broker
+ storage:
+   type: jbod
+   volumes:
+     - id: 0
+       type: persistent-claim
+       size: 100Gi
+       deleteClaim: false
+---
+
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+ name: my-cluster
+ annotations:
+   strimzi.io/node-pools: enabled
+   strimzi.io/kraft: enabled
+spec:
+ kafka:
+   version: 3.8.0
+   metadataVersion: 3.5-IV2
+   # The replicas field is required by the Kafka CRD schema while the KafkaNodePools feature gate is in alpha phase.
+   # But it will be ignored when Kafka Node Pools are used
+  #  replicas: 3
+   listeners:
+     - name: plain
+       port: 9092
+       type: internal
+       tls: false
+     - name: tls
+       port: 9093
+       type: internal
+       tls: true
+   config:
+     offsets.topic.replication.factor: 3
+     transaction.state.log.replication.factor: 3
+     transaction.state.log.min.isr: 2
+     default.replication.factor: 3
+     min.insync.replicas: 2
 ```
 
-## Producer and Consume the Messages With Key and Value
-
-- Produce Messages with Key and Value to the topic.
-
+### Apply Kafka.yaml
 ```
-docker exec --interactive --tty kafka1  \
-kafka-console-producer --bootstrap-server kafka1:19092 \
-                       --topic test-topic \
-                       --property "key.separator=-" --property "parse.key=true"
+kubectl apply -f kafka.yaml
 ```
 
-- Consuming messages with Key and Value from a topic.
-
+### Run Kafka Client 
 ```
-docker exec --interactive --tty kafka1  \
-kafka-console-consumer --bootstrap-server kafka1:19092 \
-                       --topic test-topic \
-                       --from-beginning \
-                       --property "key.separator= - " --property "print.key=true"
+kubectl run kafka-client -n kafka --rm -ti --image bitnami/kafka:3.5.1 -- bash
 ```
 
-### Consume Messages using Consumer Groups
-
-
+### Test with client 
 ```
-docker exec --interactive --tty kafka1  \
-kafka-console-consumer --bootstrap-server kafka1:19092 \
-                       --topic test-topic --group console-consumer-41911\
-                       --property "key.separator= - " --property "print.key=true"
+kafka-topics.sh --version --bootstrap-server <BOOTSTRAP_CLUSTER_IP>:9092
+kafka-topics.sh --list --bootstrap-server <BOOTSTRAP_CLUSTER_IP>:9092
 ```
-
-- Example Messages:
-
-```
-a-abc
-b-bus
-```
-
-### Consume Messages With Headers
-
-```
-docker exec --interactive --tty kafka1  \
-kafka-console-consumer --bootstrap-server kafka1:19092 \
-                       --topic library-events.DLT \
-                       --property "print.headers=true" --property "print.timestamp=true" 
-```
-
-- Example Messages:
-
-```
-a-abc
-b-bus
-```
-

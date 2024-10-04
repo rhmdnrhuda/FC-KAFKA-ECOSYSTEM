@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "User",
+  "namespace": "com.kafkademo.domain",
+  "fields": [
+    {"name": "id", "type": "string"},
+    {"name": "name", "type": "string"}
+  ]
+}
