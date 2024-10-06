@@ -1,0 +1,246 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>demo-flink-transaction-java</artifactId>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+
+        <!-- This improves the out-of-the-box experience in Eclipse by resolving some warnings. -->
+        <plugin>
+          <artifactId>lifecycle-mapping</artifactId>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <action>
+                    <ignore/>
+                  </action>
+                  <pluginExecutionFilter>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <goals>
+                      <goal>shade</goal>
+                    </goals>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <versionRange>[3.1.1,)</versionRange>
+                  </pluginExecutionFilter>
+                </pluginExecution>
+                <pluginExecution>
+                  <action>
+                    <ignore/>
+                  </action>
+                  <pluginExecutionFilter>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <goals>
+                      <goal>testCompile</goal>
+                      <goal>compile</goal>
+                    </goals>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <versionRange>[3.1,)</versionRange>
+                  </pluginExecutionFilter>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+          <groupId>org.eclipse.m2e</groupId>
+          <version>1.0.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+
+      <!-- Java Compiler -->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${target.java.version}</source>
+          <target>${target.java.version}</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.1</version>
+      </plugin>
+
+      <!-- We use the maven-shade plugin to create a fat jar that contains all necessary dependencies. -->
+      <!-- Change the value of <mainClass>...</mainClass> if your program entry point changes. -->
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <!-- Run shade goal on package phase -->
+          <execution>
+            <configuration>
+              <artifactSet>
+                <excludes>
+                  <exclude>org.apache.flink:flink-shaded-force-shading</exclude>
+                  <exclude>com.google.code.findbugs:jsr305</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>org.apache.logging.log4j:*</exclude>
+                </excludes>
+              </artifactSet>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <filters>
+                <filter>
+                  <!-- Do not copy the signatures in the META-INF folder.
+                  Otherwise, this might cause SecurityExceptions when using the JAR. -->
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>demokafka.DataStreamJob</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.1.1</version>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <!-- Apache Flink dependencies -->
+    <!-- These dependencies are provided, because they should not be packaged into the JAR file. -->
+    <dependency>
+      <artifactId>flink-streaming-java</artifactId>
+      <groupId>org.apache.flink</groupId>
+      <scope>provided</scope>
+      <version>${flink.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>flink-clients</artifactId>
+      <groupId>org.apache.flink</groupId>
+      <scope>provided</scope>
+      <version>${flink.version}</version>
+    </dependency>
+
+
+    <!-- Add connector dependencies here. They must be in the default scope (compile). -->
+
+    <!-- Example:
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-kafka</artifactId>
+      <version>3.0.0-1.17</version>
+    </dependency>
+    -->
+    <dependency>
+      <artifactId>flink-connector-kafka</artifactId>
+      <groupId>org.apache.flink</groupId>
+      <version>3.0.0-1.17</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>flink-connector-jdbc</artifactId>
+      <groupId>org.apache.flink</groupId>
+      <version>3.2.0-1.18</version>
+    </dependency>
+    <dependency>
+      <artifactId>mysql-connector-java</artifactId>
+      <groupId>mysql</groupId>
+      <version>5.1.44</version>
+    </dependency>
+    <dependency>
+      <artifactId>flink-shaded-guava</artifactId>
+      <groupId>org.apache.flink</groupId>
+      <version>30.1.1-jre-16.1</version>
+    </dependency>
+    <dependency>
+      <artifactId>flink-table-api-java-bridge_2.12</artifactId>
+      <groupId>org.apache.flink</groupId>
+      <version>1.14.6</version>
+    </dependency>
+    <dependency>
+      <artifactId>flink-connector-elasticsearch7</artifactId>
+      <groupId>org.apache.flink</groupId>
+      <version>3.0.1-1.17</version>
+    </dependency>
+    <!-- Add logging framework, to produce console output when running in the IDE. -->
+    <!-- These dependencies are excluded from the application JAR by default. -->
+    <dependency>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <scope>runtime</scope>
+      <version>${log4j.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>log4j-api</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <scope>runtime</scope>
+      <version>${log4j.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>log4j-core</artifactId>
+      <groupId>org.apache.logging.log4j</groupId>
+      <scope>runtime</scope>
+      <version>${log4j.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>lombok</artifactId>
+      <groupId>org.projectlombok</groupId>
+      <scope>provided</scope>
+      <version>1.18.34</version>
+    </dependency>
+  </dependencies>
+  <groupId>my-flink-project</groupId>
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Flink Quickstart Job</name>
+
+  <packaging>jar</packaging>
+
+  <properties>
+    <flink.version>1.18.0</flink.version>
+    <log4j.version>2.17.1</log4j.version>
+    <maven.compiler.source>${target.java.version}</maven.compiler.source>
+    <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <scala.binary.version>2.12</scala.binary.version>
+    <target.java.version>1.8</target.java.version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>apache.snapshots</id>
+      <name>Apache Development Snapshot Repository</name>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <url>https://repository.apache.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
+
+  <version>0.1</version>
+</project>

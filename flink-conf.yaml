@@ -1,0 +1,6 @@
+blob.server.port: 6124
+jobmanager.rpc.address: flink-jobmanager
+taskmanager.numberOfTaskSlots: 2
+metrics.reporter.prom.port: 9249
+metrics.reporter.prom.class: org.apache.flink.metrics.prometheus.PrometheusReporter
+query.server.port: 6125
