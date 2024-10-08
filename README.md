@@ -97,6 +97,29 @@ Exec kafka client: kubectl exec -it kafka-client -n kafka -- bash
 ```
 
 
+### Upgrade Kafka
+```
+Check current version: 
+    kubectl get kafka my-cluster -o yaml
+
+Check the state of your topics and partitions:
+    kubectl exec -n kafka kafka-client -- kafka-topics.sh --describe --bootstrap-server my-cluster-kafka-bootstrap.kafka.svc:9092
+
+Check consumer group lags:
+    kubectl exec -n kafka kafka-client -- kafka-consumer-groups.sh --describe --all-groups --bootstrap-server my-cluster-kafka-bootstrap.kafka.svc:9092
+```
+
+
+
+
+
+
+
+
+
+
+
+
 ### Security SASL/SCRAM
 Check Security Configurations: 
 ```
@@ -243,29 +266,81 @@ quota.producer.<client-id>=512000  # 512 KB/s for a specific producer client
 quota.consumer.<client-id>=512000   # 512 KB/s for a specific consumer client
 ```
 
-
-
 ## Monitoring and Operation Tools Prometheus
-### Install Prometheus
+Create a namespace for monitoring
 ```
-1. Create namespace: 
-    kubectl create namespace monitoring
+ kubectl create namespace monitoring
+ ```
 
-2. Add the Prometheus community Helm chart repository
-    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-
-3. Update your Helm repositories to ensure you have the latest charts.
-    helm repo update
-    
-4. Install Prometheus in the monitoring namespace.
-    helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
-
-5. Forward the Prometheus Service
-    kubectl port-forward svc/prometheus-server -n monitoring 9090:80
+Create and apply prometheus-operator-deployment.yaml
+```
+nano prometheus-operator-deployment.yaml
+kubectl apply -f prometheus-operator-deployment.yaml -n monitoring --force-conflicts=true --server-side
 ```
 
-Part 2
+Create and apply prometheus.yaml 
 ```
-helm install kafka-exporter prometheus-community/prometheus-kafka-exporter --namespace monitoring --set kafka.server=my-cluster-kafka-bootstrap.kafka.svc:9092
- 
+nano prometheus.yaml
+kubectl apply -f prometheus.yaml -n monitoring
 ```
+
+Create and apply strimzi-pod-monitor.yaml
+``` 
+nano strimzi-pod-monitor.yaml
+kubectl apply -f strimzi-pod-monitor.yaml -n monitoring
+```
+
+Create and apply grafana.yaml
+```
+nano grafana.yaml
+kubectl apply -f grafana.yaml -n monitoring
+```
+
+Forward Grafana & Prometheus-operated Service Port
+```
+kubectl port-forward svc/grafana 3001:3000 -n monitoring & 
+kubectl port-forward svc/prometheus-operated 9090:9090 -n monitoring &
+```
+note: if error from kafka, you can reapply the kafka using kafka-v2.yaml
+
+### Changing Number of Partitions
+
+my-topic.yaml
+```
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: my-topic  # Change to your desired topic name
+  namespace: kafka  # Ensure this matches your Kafka namespace
+spec:
+  partitions: 5  # Desired number of partitions
+  replicas: 3    # Desired replication factor
+
+```
+
+Command to change number of partition and replicas
+```
+kubectl apply -f - <<EOF
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: my-topic
+  namespace: kafka
+spec:
+  partitions: 2
+  replicas: 4
+EOF
+
+```
+
+List kafka topic
+```
+kubectl get kafkatopics -n kafka
+```
+
+Leader Election
+```
+kubectl exec my-cluster-controller-3 -n kafka -- kafka-topics.sh --zookeeper my-cluster-zookeeper:2181 --describe --topic my-topic
+```
+
+z
